@@ -14,8 +14,8 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
-	"google.golang.org/appengine/memcache"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/memcache"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -86,6 +86,9 @@ func (s *MemcacheDatastoreStore) New(r *http.Request, name string) (*sessions.Se
 			err = loadFromMemcache(c, session)
 			if err == memcache.ErrCacheMiss {
 				err = loadFromDatastore(c, s.kind, session)
+				if err == nil {
+					err = saveToMemcache(c, s.nonPersistentSessionDuration, session)
+				}
 			}
 			if err == nil {
 				session.IsNew = false
